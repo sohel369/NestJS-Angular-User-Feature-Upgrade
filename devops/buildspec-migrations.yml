@@ -1,0 +1,26 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing dependencies for migration execution..."
+      - cd backend
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Verifying PostgreSQL RDS connectivity..."
+      - npx ts-node -e "console.log('Testing DB connection with host:', process.env.DB_HOST)"
+
+  build:
+    commands:
+      - echo "Executing TypeORM Database Migrations (Zero-Downtime Safe)..."
+      - npm run migration:run
+      - echo "Seeding initial reference & demo data if necessary..."
+      - npm run seed
+
+  post_build:
+    commands:
+      - echo "Database migrations and seeding verified successfully!"

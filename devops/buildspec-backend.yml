@@ -1,0 +1,36 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing Backend Dependencies..."
+      - cd backend
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Running Backend Unit Tests (Jest)..."
+      - npm run test -- --coverage
+      - echo "Logging into Amazon ECR..."
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $REPOSITORY_URI
+
+  build:
+    commands:
+      - echo "Building NestJS TypeScript Application..."
+      - npm run build
+      - echo "Building Docker Image for ECS..."
+      - docker build -t $REPOSITORY_URI:latest -t $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+
+  post_build:
+    commands:
+      - echo "Pushing Docker Image to Amazon ECR..."
+      - docker push $REPOSITORY_URI:latest
+      - docker push $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - printf '[{"name":"user-platform-backend","imageUri":"%s"}]' $REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions.json
+
+artifacts:
+  files:
+    - backend/imagedefinitions.json
+    - backend/dist/**/*

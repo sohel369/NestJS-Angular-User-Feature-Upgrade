@@ -1,0 +1,299 @@
+<div class="dashboard-page">
+  <!-- Page Header -->
+  <header class="dash-hero">
+    <div class="dash-hero-title">
+      <div class="breadcrumbs">
+        <span class="crumb">Aura Platform</span>
+        <span class="separator">/</span>
+        <span class="crumb active">Real-Time Analytics</span>
+      </div>
+      <div class="title-wrap">
+        <h1 class="page-title">Executive Cloud Analytics</h1>
+        <div class="live-status-pill" [class.connected]="isLiveConnected">
+          <span class="live-indicator"></span>
+          <span>{{ isLiveConnected ? 'WebSockets Live' : 'Reconnecting' }}</span>
+        </div>
+      </div>
+      <p class="page-description">Aggregated PostgreSQL metrics streaming live via NestJS WebSocket Gateway.</p>
+    </div>
+
+    <!-- Actions -->
+    <div class="dash-hero-actions">
+      <button type="button" class="btn btn-outline" (click)="loadStats()" title="Refresh Aggregated PostgreSQL Stats">
+        <span class="material-symbols-outlined">refresh</span>
+        <span>Refresh</span>
+      </button>
+
+      <button type="button" class="btn btn-primary trigger-btn" (click)="triggerLiveEvent()" [disabled]="isTriggering" title="Emit live simulated event to WebSockets">
+        <span class="material-symbols-outlined">bolt</span>
+        <span *ngIf="!isTriggering">Simulate Live Event</span>
+        <span *ngIf="isTriggering">Emitting Event...</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Bento Metric KPI Cards -->
+  <section class="metrics-row" *ngIf="stats">
+    <!-- Card 1: Total Users -->
+    <div class="card metric-bento-card">
+      <div class="metric-top-row">
+        <span class="metric-label">{{ stats.metrics.totalUsers.label }}</span>
+        <div class="icon-chip bg-blue">
+          <span class="material-symbols-outlined">group</span>
+        </div>
+      </div>
+      <div class="metric-main-val">{{ stats.metrics.totalUsers.value }}</div>
+      <div class="metric-bottom-row">
+        <div class="trend-badge positive">
+          <span class="material-symbols-outlined">trending_up</span>
+          <span>{{ stats.metrics.totalUsers.change }}</span>
+        </div>
+        <svg class="sparkline-svg" viewBox="0 0 60 20">
+          <path d="M0,15 Q15,18 30,8 T60,4" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 2: Active Sessions -->
+    <div class="card metric-bento-card">
+      <div class="metric-top-row">
+        <span class="metric-label">{{ stats.metrics.activeSessions.label }}</span>
+        <div class="icon-chip bg-green">
+          <span class="material-symbols-outlined">person_check</span>
+        </div>
+      </div>
+      <div class="metric-main-val">{{ stats.metrics.activeSessions.value }}</div>
+      <div class="metric-bottom-row">
+        <div class="trend-badge positive">
+          <span class="material-symbols-outlined">trending_up</span>
+          <span>{{ stats.metrics.activeSessions.change }}</span>
+        </div>
+        <svg class="sparkline-svg" viewBox="0 0 60 20">
+          <path d="M0,18 Q15,12 30,14 T60,2" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 3: Revenue Volume -->
+    <div class="card metric-bento-card">
+      <div class="metric-top-row">
+        <span class="metric-label">{{ stats.metrics.totalTransactions.label }}</span>
+        <div class="icon-chip bg-purple">
+          <span class="material-symbols-outlined">payments</span>
+        </div>
+      </div>
+      <div class="metric-main-val">{{ stats.metrics.totalTransactions.value }}</div>
+      <div class="metric-bottom-row">
+        <div class="trend-badge positive">
+          <span class="material-symbols-outlined">trending_up</span>
+          <span>{{ stats.metrics.totalTransactions.change }}</span>
+        </div>
+        <svg class="sparkline-svg" viewBox="0 0 60 20">
+          <path d="M0,14 Q20,16 35,6 T60,1" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Card 4: System Health & Uptime -->
+    <div class="card metric-bento-card">
+      <div class="metric-top-row">
+        <span class="metric-label">{{ stats.metrics.systemHealth.label }}</span>
+        <div class="icon-chip bg-cyan">
+          <span class="material-symbols-outlined">health_and_safety</span>
+        </div>
+      </div>
+      <div class="metric-main-val">{{ stats.metrics.systemHealth.value }}</div>
+      <div class="metric-bottom-row">
+        <div class="trend-badge positive">
+          <span class="material-symbols-outlined">verified</span>
+          <span>{{ stats.metrics.systemHealth.change }}</span>
+        </div>
+        <div class="uptime-gauge">
+          <svg viewBox="0 0 24 24" class="gauge-svg">
+            <circle cx="12" cy="12" r="9" stroke="rgba(16, 185, 129, 0.2)" stroke-width="2.5" fill="none"/>
+            <circle cx="12" cy="12" r="9" stroke="#10b981" stroke-width="2.5" stroke-dasharray="54" stroke-dashoffset="2" stroke-linecap="round" fill="none"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 100% Responsive Analytics Bento Layout (Trends & Event Distribution) -->
+  <div class="analytics-bento-grid" *ngIf="stats">
+    <!-- 1. Activity Stream Trends (100% Fully Responsive) -->
+    <div class="card chart-bento-card">
+      <div class="card-top-head">
+        <div class="head-text-group">
+          <div class="head-title-row">
+            <span class="material-symbols-outlined head-icon">monitoring</span>
+            <h2 class="card-heading">Activity Stream Trends</h2>
+          </div>
+          <p class="card-subheading">Logins, profile updates, and transaction volume over 6h intervals</p>
+        </div>
+        <div class="time-stamp-chip">
+          <span class="material-symbols-outlined">schedule</span>
+          <span>{{ lastUpdated }}</span>
+        </div>
+      </div>
+
+      <div class="chart-viewport">
+        <!-- Scrollable Chart Container for Mobile Touch -->
+        <div class="chart-scroll-container">
+          <div class="bars-container">
+            <div class="bar-column-wrap" *ngFor="let time of stats.activityTrends.timestamps; let i = index">
+              <div class="bar-column">
+                <div
+                  class="bar-slice slice-logins"
+                  [style.height.%]="(stats.activityTrends.logins[i] / 50) * 100"
+                  title="Logins: {{ stats.activityTrends.logins[i] }}"
+                ></div>
+                <div
+                  class="bar-slice slice-updates"
+                  [style.height.%]="(stats.activityTrends.updates[i] / 50) * 100"
+                  title="Updates: {{ stats.activityTrends.updates[i] }}"
+                ></div>
+                <div
+                  class="bar-slice slice-trans"
+                  [style.height.%]="(stats.activityTrends.transactions[i] / 50) * 100"
+                  title="Transactions: {{ stats.activityTrends.transactions[i] }}"
+                ></div>
+              </div>
+              <span class="bar-x-label">{{ time }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-legend-bar">
+          <div class="legend-pill"><span class="dot dot-logins"></span> Logins</div>
+          <div class="legend-pill"><span class="dot dot-updates"></span> Profile Updates</div>
+          <div class="legend-pill"><span class="dot dot-trans"></span> Transactions</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Event Distribution (100% Fully Responsive) -->
+    <div class="card distribution-bento-card">
+      <div class="card-top-head">
+        <div class="head-text-group">
+          <div class="head-title-row">
+            <span class="material-symbols-outlined head-icon text-purple">pie_chart</span>
+            <h2 class="card-heading">Event Distribution</h2>
+          </div>
+          <p class="card-subheading">PostgreSQL GROUP BY aggregation</p>
+        </div>
+      </div>
+
+      <div class="dist-list">
+        <div class="dist-item-box" *ngFor="let item of stats.activityDistribution">
+          <div class="dist-header">
+            <div class="dist-title-wrap">
+              <span class="dist-type-dot" [ngClass]="'dot-' + item.type.toLowerCase()"></span>
+              <span class="dist-name">{{ item.type }}</span>
+            </div>
+            <div class="dist-stats-group">
+              <span class="dist-count-badge">{{ item.count }} events</span>
+              <span class="dist-pct-badge">{{ ((item.count / getMaxDistributionCount()) * 100) | number: '1.0-0' }}%</span>
+            </div>
+          </div>
+          <div class="dist-track">
+            <div
+              class="dist-fill"
+              [ngClass]="'fill-' + item.type.toLowerCase()"
+              [style.width.%]="(item.count / getMaxDistributionCount()) * 100"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live Activity Feed Table -->
+  <section class="card feed-bento-card" *ngIf="stats">
+    <div class="feed-top-bar">
+      <div>
+        <h2 class="card-heading">Live Real-Time Activity Feed</h2>
+        <p class="card-subheading">Instant WebSocket stream emitted directly from NestJS backend</p>
+      </div>
+
+      <div class="filter-pills-row">
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedFilter === 'ALL'"
+          (click)="setFilter('ALL')"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedFilter === 'LOGIN'"
+          (click)="setFilter('LOGIN')"
+        >
+          Logins
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedFilter === 'PROFILE_UPDATE'"
+          (click)="setFilter('PROFILE_UPDATE')"
+        >
+          Profile Updates
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.active]="selectedFilter === 'TRANSACTION'"
+          (click)="setFilter('TRANSACTION')"
+        >
+          Transactions
+        </button>
+      </div>
+    </div>
+
+    <div class="table-responsive-box">
+      <table class="luxury-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Activity Type</th>
+            <th>Description</th>
+            <th>Value</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let act of filteredActivities" class="data-row">
+            <td class="col-user">
+              <img
+                [src]="act.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'"
+                alt="Avatar"
+                class="user-avatar-img"
+              />
+              <div class="user-meta-wrap">
+                <span class="user-name-txt">{{ act.userName }}</span>
+                <span class="user-email-txt">{{ act.userEmail }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="getActivityBadgeClass(act.activityType)">
+                <span class="material-symbols-outlined" *ngIf="act.activityType === 'LOGIN'">login</span>
+                <span class="material-symbols-outlined" *ngIf="act.activityType === 'PROFILE_UPDATE'">manage_accounts</span>
+                <span class="material-symbols-outlined" *ngIf="act.activityType === 'AVATAR_UPLOAD'">account_box</span>
+                <span class="material-symbols-outlined" *ngIf="act.activityType === 'TRANSACTION'">credit_card</span>
+                <span class="material-symbols-outlined" *ngIf="act.activityType === 'EXPORT'">file_download</span>
+                {{ act.activityType }}
+              </span>
+            </td>
+            <td class="col-description">{{ act.description }}</td>
+            <td class="col-monetary">
+              <span *ngIf="act.value > 0" class="positive-gain">+${{ act.value }}</span>
+              <span *ngIf="act.value === 0" class="neutral-dash">—</span>
+            </td>
+            <td class="col-timestamp">{{ act.createdAt | date: 'mediumTime' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

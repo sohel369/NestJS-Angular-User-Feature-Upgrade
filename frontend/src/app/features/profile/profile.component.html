@@ -1,0 +1,285 @@
+<div class="profile-page">
+  <!-- Page Header -->
+  <header class="profile-hero">
+    <div class="profile-hero-title">
+      <div class="breadcrumbs">
+        <span class="crumb">Platform</span>
+        <span class="separator">/</span>
+        <span class="crumb active">Account Settings</span>
+      </div>
+      <div class="title-wrap">
+        <h1 class="page-title">Profile & Team</h1>
+      </div>
+      <p class="page-description">Manage your personal details, avatar, security settings, and notifications.</p>
+    </div>
+
+    <!-- Active User Switcher for Testing/Demo -->
+    <div class="user-switcher" *ngIf="allUsers.length > 1">
+      <label for="userSelect">Active Account:</label>
+      <select id="userSelect" (change)="selectUser(allUsers[$any($event.target).selectedIndex])">
+        <option *ngFor="let u of allUsers" [selected]="u.id === currentUser?.id">
+          {{ u.name }} ({{ u.role | uppercase }})
+        </option>
+      </select>
+    </div>
+  </header>
+
+  <!-- Notification Toasts -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <span class="material-symbols-outlined alert-icon">check_circle</span>
+    <span>{{ successMessage }}</span>
+  </div>
+
+  <div class="alert alert-danger" *ngIf="errorMessage">
+    <span class="material-symbols-outlined alert-icon">error</span>
+    <span>{{ errorMessage }}</span>
+  </div>
+
+  <!-- Main Grid Layout -->
+  <div class="profile-layout" *ngIf="currentUser">
+    <!-- Left Column: User Summary Card -->
+    <aside class="card summary-card">
+      <div class="avatar-box">
+        <div class="avatar-ring">
+          <img
+            [src]="avatarPreview || presetAvatars[0]"
+            alt="User Avatar"
+            class="avatar-img"
+          />
+          <div class="avatar-upload-overlay" *ngIf="isUploadingAvatar">
+            <div class="spinner"></div>
+          </div>
+          <label for="avatarInput" class="avatar-edit-badge" title="Upload Custom Avatar">
+            <span class="material-symbols-outlined">photo_camera</span>
+            <input
+              id="avatarInput"
+              type="file"
+              accept="image/png, image/jpeg, image/webp"
+              (change)="onAvatarSelected($event)"
+              style="display: none"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div class="user-heading">
+        <div class="name-line">
+          <h2 class="name-text">{{ currentUser.name }}</h2>
+          <span class="material-symbols-outlined verified-badge" title="Verified AWS Engineer">verified</span>
+        </div>
+        <p class="role-text">{{ currentUser.profile?.title || 'Principal Full-Stack Engineer' }}</p>
+        <span class="badge" [ngClass]="currentUser.status === 'active' ? 'badge-success' : 'badge-warning'">
+          {{ currentUser.status }}
+        </span>
+      </div>
+
+      <!-- Profile Strength Progress Bar -->
+      <div class="strength-module">
+        <div class="strength-top">
+          <span class="strength-label">Profile Strength</span>
+          <span class="strength-percent">{{ profileStrength }}%</span>
+        </div>
+        <div class="strength-track">
+          <div class="strength-fill" [style.width.%]="profileStrength"></div>
+        </div>
+      </div>
+
+      <!-- Quick Preset Avatars Gallery -->
+      <div class="preset-gallery">
+        <span class="gallery-title">Presets:</span>
+        <div class="preset-list">
+          <img
+            *ngFor="let p of presetAvatars"
+            [src]="p"
+            alt="Preset avatar"
+            class="preset-item"
+            [class.active]="avatarPreview === p"
+            (click)="selectPresetAvatar(p)"
+          />
+        </div>
+      </div>
+
+      <!-- Metadata List -->
+      <div class="meta-section">
+        <div class="meta-row">
+          <div class="meta-label">
+            <span class="material-symbols-outlined icon">mail</span>
+            <span>Email</span>
+          </div>
+          <span class="meta-val">{{ currentUser.email }}</span>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">
+            <span class="material-symbols-outlined icon">domain</span>
+            <span>Department</span>
+          </div>
+          <span class="meta-val">{{ currentUser.profile?.department || 'Engineering' }}</span>
+        </div>
+        <div class="meta-row">
+          <div class="meta-label">
+            <span class="material-symbols-outlined icon">location_on</span>
+            <span>Location</span>
+          </div>
+          <span class="meta-val">{{ currentUser.profile?.location || 'San Francisco, CA' }}</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Right Column: Settings Form -->
+    <main class="card settings-card">
+      <!-- Tabs Navigation -->
+      <nav class="settings-tabs" aria-label="Profile Tabs">
+        <button
+          type="button"
+          class="tab-link"
+          [class.active]="activeTab === 'general'"
+          (click)="setTab('general')"
+        >
+          <span>General</span>
+        </button>
+        <button
+          type="button"
+          class="tab-link"
+          [class.active]="activeTab === 'social'"
+          (click)="setTab('social')"
+        >
+          <span>Social & Links</span>
+        </button>
+        <button
+          type="button"
+          class="tab-link"
+          [class.active]="activeTab === 'preferences'"
+          (click)="setTab('preferences')"
+        >
+          <span>Preferences</span>
+        </button>
+      </nav>
+
+      <!-- Form Content -->
+      <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="settings-form">
+        <!-- Tab 1: General Info -->
+        <section *ngIf="activeTab === 'general'" class="tab-body">
+          <div class="form-grid">
+            <div class="field-item">
+              <label for="fullName">Full Name *</label>
+              <input id="fullName" type="text" formControlName="name" placeholder="e.g. Alex Morgan" />
+              <span class="err-msg" *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched">
+                Valid name is required
+              </span>
+            </div>
+
+            <div class="field-item">
+              <label for="emailAddr">Work Email (Immutable)</label>
+              <input id="emailAddr" type="email" formControlName="email" />
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-item">
+              <label for="jobTitle">Job Title</label>
+              <input id="jobTitle" type="text" formControlName="title" placeholder="e.g. Lead Cloud Architect" />
+            </div>
+
+            <div class="field-item">
+              <label for="dept">Department</label>
+              <input id="dept" type="text" formControlName="department" placeholder="e.g. Engineering & DevOps" />
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-item">
+              <label for="phone">Phone Number</label>
+              <input id="phone" type="text" formControlName="phoneNumber" placeholder="+1 (555) 000-0000" />
+            </div>
+
+            <div class="field-item">
+              <label for="loc">Location</label>
+              <input id="loc" type="text" formControlName="location" placeholder="e.g. San Francisco, CA" />
+            </div>
+          </div>
+
+          <div class="field-item full-width">
+            <div class="label-row">
+              <label for="bio">Biography</label>
+              <span class="counter-text">{{ bioLength }} / 500</span>
+            </div>
+            <textarea
+              id="bio"
+              rows="4"
+              formControlName="bio"
+              placeholder="Tell your team about your technical focus and AWS architecture responsibilities..."
+            ></textarea>
+          </div>
+        </section>
+
+        <!-- Tab 2: Social & Links -->
+        <section *ngIf="activeTab === 'social'" class="tab-body">
+          <div class="form-grid">
+            <div class="field-item">
+              <label for="github">GitHub Profile</label>
+              <input id="github" type="url" formControlName="github" placeholder="https://github.com/username" />
+            </div>
+
+            <div class="field-item">
+              <label for="linkedin">LinkedIn Profile</label>
+              <input id="linkedin" type="url" formControlName="linkedin" placeholder="https://linkedin.com/in/username" />
+            </div>
+          </div>
+
+          <div class="form-grid">
+            <div class="field-item">
+              <label for="twitter">Twitter / X Profile</label>
+              <input id="twitter" type="url" formControlName="twitter" placeholder="https://twitter.com/username" />
+            </div>
+
+            <div class="field-item">
+              <label for="website">Personal Website</label>
+              <input id="website" type="url" formControlName="website" placeholder="https://alexmorgan.dev" />
+            </div>
+          </div>
+        </section>
+
+        <!-- Tab 3: Preferences -->
+        <section *ngIf="activeTab === 'preferences'" class="tab-body">
+          <div class="toggle-list">
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h3>Email Deployment Digests</h3>
+                <p>Receive deployment reports and zero-downtime migration status updates.</p>
+              </div>
+              <input type="checkbox" formControlName="emailNotifications" class="clean-switch" />
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h3>Urgent SMS Incident Alerts</h3>
+                <p>Get notified directly on your mobile device for critical infrastructure errors.</p>
+              </div>
+              <input type="checkbox" formControlName="smsNotifications" class="clean-switch" />
+            </div>
+
+            <div class="toggle-row">
+              <div class="toggle-info">
+                <h3>Interface Theme</h3>
+                <p>Choose your preferred interface contrast mode.</p>
+              </div>
+              <select formControlName="theme" class="clean-select">
+                <option value="light">Light Mode</option>
+                <option value="dark">Dark Slate</option>
+                <option value="system">System Default</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- Form Actions -->
+        <div class="form-footer">
+          <button type="submit" class="btn btn-primary" [disabled]="profileForm.invalid || isSaving">
+            <span *ngIf="!isSaving">Save Changes</span>
+            <span *ngIf="isSaving">Saving...</span>
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>

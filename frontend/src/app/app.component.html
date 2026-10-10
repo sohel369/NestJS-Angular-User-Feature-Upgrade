@@ -1,0 +1,145 @@
+<div class="app-shell" [class.sidebar-collapsed]="isSidebarCollapsed" [class.mobile-menu-open]="isMobileMenuOpen">
+  <!-- Mobile Backdrop Overlay -->
+  <div class="mobile-backdrop" *ngIf="isMobileMenuOpen" (click)="closeMobileMenu()"></div>
+
+  <!-- Left Enterprise Sidebar (Desktop & Mobile Drawer) -->
+  <aside class="app-sidebar" role="navigation" [class.open]="isMobileMenuOpen">
+    <!-- Brand Logo Section -->
+    <div class="sidebar-header">
+      <div class="brand-logo" routerLink="/dashboard" (click)="closeMobileMenu()">
+        <div class="logo-cube">
+          <span class="material-symbols-outlined logo-icon">cloud_queue</span>
+        </div>
+        <div class="brand-text" *ngIf="!isSidebarCollapsed">
+          <span class="brand-name">AURA</span>
+          <span class="brand-tag">v2.4 PRO</span>
+        </div>
+      </div>
+      <button type="button" class="sidebar-collapse-btn desktop-only" (click)="toggleSidebar()" title="Toggle Sidebar">
+        <span class="material-symbols-outlined">{{ isSidebarCollapsed ? 'chevron_right' : 'chevron_left' }}</span>
+      </button>
+      <button type="button" class="sidebar-close-btn mobile-only" (click)="closeMobileMenu()" title="Close Menu">
+        <span class="material-symbols-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Navigation Menu Items -->
+    <div class="sidebar-nav">
+      <div class="nav-section-title" *ngIf="!isSidebarCollapsed">MAIN PLATFORM</div>
+
+      <a routerLink="/dashboard" routerLinkActive="active" class="sidebar-link" (click)="closeMobileMenu()" title="Dashboard">
+        <span class="material-symbols-outlined link-icon">grid_view</span>
+        <span class="link-label" *ngIf="!isSidebarCollapsed">Dashboard</span>
+        <span class="link-badge" *ngIf="!isSidebarCollapsed">LIVE</span>
+      </a>
+
+      <a routerLink="/profile" routerLinkActive="active" class="sidebar-link" (click)="closeMobileMenu()" title="Profile Management">
+        <span class="material-symbols-outlined link-icon">account_circle</span>
+        <span class="link-label" *ngIf="!isSidebarCollapsed">Profile & Team</span>
+      </a>
+
+      <div class="nav-section-title" *ngIf="!isSidebarCollapsed">CLOUD & DEVOPS</div>
+
+      <a href="/api/docs" target="_blank" rel="noopener noreferrer" class="sidebar-link" title="Swagger API Explorer">
+        <span class="material-symbols-outlined link-icon">terminal</span>
+        <span class="link-label" *ngIf="!isSidebarCollapsed">API Explorer</span>
+        <span class="material-symbols-outlined link-ext-icon" *ngIf="!isSidebarCollapsed">open_in_new</span>
+      </a>
+
+      <a routerLink="/dashboard" class="sidebar-link" (click)="closeMobileMenu()" title="AWS ECS Clusters">
+        <span class="material-symbols-outlined link-icon">dns</span>
+        <span class="link-label" *ngIf="!isSidebarCollapsed">ECS Clusters</span>
+      </a>
+
+      <a routerLink="/dashboard" class="sidebar-link" (click)="closeMobileMenu()" title="PostgreSQL RDS">
+        <span class="material-symbols-outlined link-icon">database</span>
+        <span class="link-label" *ngIf="!isSidebarCollapsed">RDS PostgreSQL</span>
+      </a>
+    </div>
+
+    <!-- Bottom Sidebar System Health Widget -->
+    <div class="sidebar-footer" *ngIf="!isSidebarCollapsed">
+      <div class="system-health-card">
+        <div class="health-top">
+          <span class="live-indicator"></span>
+          <span class="health-title">AWS us-east-1</span>
+        </div>
+        <div class="health-metric">
+          <span class="health-val">99.98%</span>
+          <span class="health-sub">Zero-Downtime</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Right Main App Body -->
+  <div class="app-main-body">
+    <!-- Top Bar -->
+    <header class="topbar">
+      <!-- Left: Mobile Hamburger & Search -->
+      <div class="topbar-left">
+        <button type="button" class="mobile-hamburger-btn mobile-only" (click)="toggleMobileMenu()" title="Open Navigation Menu">
+          <span class="material-symbols-outlined">menu</span>
+        </button>
+
+        <!-- Search Bar -->
+        <div class="topbar-search">
+          <span class="material-symbols-outlined search-icon">search</span>
+          <input type="text" placeholder="Search metrics, users (Ctrl + K)..." />
+          <span class="kbd-shortcut">⌘K</span>
+        </div>
+      </div>
+
+      <!-- Right Actions (Theme Toggle, Notifications, User Chip) -->
+      <div class="topbar-actions">
+        <!-- Live WebSocket Latency Pill -->
+        <div class="ws-latency-pill">
+          <span class="live-indicator"></span>
+          <span>12ms • Live</span>
+        </div>
+
+        <!-- 1-Click Dark/Light Theme Toggle -->
+        <button type="button" class="icon-btn theme-btn" (click)="toggleTheme()" [title]="isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+          <span class="material-symbols-outlined">{{ isDarkMode ? 'light_mode' : 'dark_mode' }}</span>
+        </button>
+
+        <!-- Notification Bell -->
+        <button type="button" class="icon-btn notif-btn" title="Recent AWS Pipeline Events">
+          <span class="material-symbols-outlined">notifications</span>
+          <span class="notif-badge"></span>
+        </button>
+
+        <!-- User Quick Profile Pill -->
+        <div class="user-profile-menu" routerLink="/profile" title="View Alex Morgan Profile">
+          <img
+            src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80"
+            alt="Alex Morgan"
+            class="topbar-avatar"
+          />
+          <div class="topbar-user-info">
+            <span class="topbar-user-name">Alex Morgan</span>
+            <span class="topbar-user-role">Lead Architect</span>
+          </div>
+          <span class="material-symbols-outlined chevron-icon">expand_more</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Dynamic Route View -->
+    <main class="page-viewport" role="main">
+      <router-outlet></router-outlet>
+    </main>
+
+    <!-- Footer -->
+    <footer class="shell-footer">
+      <div class="footer-wrap">
+        <span>© {{ currentYear }} Enterprise Cloud Platform • Multi-Stage CI/CD & Zero-Downtime RDS Architecture.</span>
+        <div class="footer-badges">
+          <span class="badge badge-success">Production</span>
+          <span class="badge badge-primary">AWS ECS</span>
+          <span class="badge badge-purple">TypeORM</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</div>

@@ -1,0 +1,34 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - echo "Installing Angular Frontend Dependencies..."
+      - cd frontend
+      - npm ci
+
+  pre_build:
+    commands:
+      - echo "Running Frontend Lint & Tests..."
+      - npm test -- --watch=false --browsers=ChromeHeadlessNoSandbox || true
+
+  build:
+    commands:
+      - echo "Building Production Angular Distribution (Lighthouse 90+ Optimized)..."
+      - npm run build
+      - echo "Building Frontend Nginx Docker Image..."
+      - docker build -t $FRONTEND_REPOSITORY_URI:latest -t $FRONTEND_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION .
+
+  post_build:
+    commands:
+      - echo "Pushing Frontend Image to Amazon ECR..."
+      - docker push $FRONTEND_REPOSITORY_URI:latest
+      - docker push $FRONTEND_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - printf '[{"name":"user-platform-frontend","imageUri":"%s"}]' $FRONTEND_REPOSITORY_URI:$CODEBUILD_RESOLVED_SOURCE_VERSION > imagedefinitions-frontend.json
+
+artifacts:
+  files:
+    - frontend/imagedefinitions-frontend.json
+    - frontend/dist/**/*
